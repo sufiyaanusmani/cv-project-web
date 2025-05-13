@@ -57,7 +57,7 @@ export function ImageUploader({ label, onChange }: ImageUploaderProps) {
                   const input = document.createElement("input");
                   input.type = "file";
                   input.accept = "image/*";
-                  input.onchange = (e) => handleFileChange(e as ChangeEvent<HTMLInputElement>);
+                  input.onchange = (e) => handleFileChange(e as unknown as ChangeEvent<HTMLInputElement>);
                   input.click();
                 }}
               >
