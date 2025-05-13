@@ -5,7 +5,6 @@ import Image from "next/image";
 import { ImageUploader } from "@/components/image-uploader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
@@ -14,8 +13,6 @@ export default function Home() {
   const [image, setImage] = useState<File | null>(null);
   const [mask, setMask] = useState<File | null>(null);
   const [text, setText] = useState("");
-  const [width, setWidth] = useState("512");
-  const [height, setHeight] = useState("512");
   const [isLoading, setIsLoading] = useState(false);
   const [resultImage, setResultImage] = useState<string | null>(null);
 
@@ -40,8 +37,24 @@ export default function Home() {
       formData.append("image", image);
       formData.append("mask", mask);
       formData.append("text", text);
-      formData.append("width", width);
-      formData.append("height", height);
+
+      // The width and height are derived from the image
+      // Create a temporary image element to get dimensions
+      const imgUrl = URL.createObjectURL(image);
+      const imgEl = document.createElement("img");
+      
+      // Wait for the image to load to get its dimensions
+      await new Promise<void>((resolve) => {
+        imgEl.onload = () => {
+          formData.append("width", imgEl.width.toString());
+          formData.append("height", imgEl.height.toString());
+          resolve();
+        };
+        imgEl.src = imgUrl;
+      });
+      
+      // Clean up the object URL
+      URL.revokeObjectURL(imgUrl);
 
       const response = await fetch("/api/inpaint", {
         method: "POST",
@@ -94,39 +107,6 @@ export default function Home() {
                     onChange={(e) => setText(e.target.value)}
                     className="min-h-24"
                   />
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Output Dimensions</CardTitle>
-                  <CardDescription>Specify the width and height of the output image</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label htmlFor="width" className="text-sm font-medium">Width</label>
-                      <Input
-                        id="width"
-                        type="number"
-                        value={width}
-                        onChange={(e) => setWidth(e.target.value)}
-                        min="64"
-                        max="1024"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="height" className="text-sm font-medium">Height</label>
-                      <Input
-                        id="height"
-                        type="number"
-                        value={height}
-                        onChange={(e) => setHeight(e.target.value)}
-                        min="64"
-                        max="1024"
-                      />
-                    </div>
-                  </div>
                 </CardContent>
                 <CardFooter>
                   <Button 
